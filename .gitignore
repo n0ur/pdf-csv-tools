@@ -1,3 +1,6 @@
+# Config
+config/cleanup_template.js
+
 # Logs
 logs
 *.log
