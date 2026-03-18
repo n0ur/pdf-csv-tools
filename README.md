@@ -31,6 +31,16 @@ npm run csv-clean -- *.csv -o clean/ -d cleanup_def.js
 -c: Max number of concurrent processes to run (optional, default is 5)
 ```
 
+#### csv-aggregate
+
+```
+npm run csv-aggregate -- *.csv -o output/ -d aggregate_def.js
+
+-o: Output directory (if it doesn't exist, the script will attempt to create it)
+-d: Path to the aggregate definition file
+-c: Max number of concurrent processes to run (optional, default is 5)
+```
+
 ## csv-clean
 
 ### Example
@@ -203,6 +213,150 @@ Extending the cleanup operations is simple, make sure to:
 - Add the entry to `src/csv-clean/index.js`.
 - Define the schema operation in `src/csv-clean/cleanupDefSchema.js`.
 - Add tests.
+
+## csv-aggregate
+
+Aggregates lines in a CSV file based on predefined keywords and custom functions, then combines the aggregates of each file into one.
+
+### Example
+
+Given CSV files with this format:
+
+<div style="display:flex;">
+<div style="margin-right: 30px">
+File 1:
+
+| Date     | Description  | Amount   |
+| -------- | ------------ | -------- |
+| 01.01.26 | Miete XYZ    | -900,70  |
+| 04.01.26 | Versicherung | -50,00   |
+| 28.01.26 | Salary       | +1000,00 |
+| 28.01.26 | Coffee       | -10,00   |
+| 31.01.26 | T-shirt      | -30,00   |
+
+</div>
+
+<div>
+File 2:
+
+| Date     | Description | Amount   |
+| -------- | ----------- | -------- |
+| 01.02.26 | Miete XYZ   | -900,70  |
+| 15.02.26 | Supermarket | -60,00   |
+| 16.02.26 | Flight to X | -70,00   |
+| 17.02.26 | Coffee      | -10,00   |
+| 28.02.26 | Salary      | +1000,00 |
+
+</div>
+</div>
+
+The script will first aggregate each file independently, based on user defined rules (see below).
+
+<div style="display:flex;">
+<div style="margin-right: 30px">
+
+File 1:
+
+| Label            | Value               |
+| ---------------- | ------------------- |
+| total_date_range | 01.01.26 - 31.01.26 |
+| Rent             | -900,70             |
+| Insurance        | -50,00              |
+| Salary           | +1000,00            |
+| Expenses         | -40,00              |
+
+</div>
+
+<div style="margin-right: 30px">
+
+File 2:
+
+| Label            | Value               |
+| ---------------- | ------------------- |
+| total_date_range | 01.02.26 - 28.02.26 |
+| Rent             | -900,70             |
+| Salary           | +1000,00            |
+| Expenses         | -140,00             |
+| Travel           | -70,00              |
+
+</div>
+</div>
+
+Then create one file with the aggregate of each file:
+
+|                  |                     |                     |
+| ---------------- | ------------------- | ------------------- |
+| total_date_range | 01.01.26 - 31.01.26 | 01.02.26 - 28.02.26 |
+| Rent             | -900,70             | -900,70             |
+| Salary           | +1000,00            | +1000,00            |
+| Insurance        | -50,00              |                     |
+| Travel           |                     | -70,00              |
+| Expenses         | -40,00              | -140,00             |
+
+This operation takes an aggregate definition file and applies it to the csv files. It uses `fast-csv` for parsing and writing the updated clean versions. The original files are not modified, new ones are created in the given output directory.
+
+### Aggregate definition file
+
+```js
+{
+  parse: {
+    // column names for the file to read or parse
+    headers: ["date", "description", "amount"],
+  },
+  format: {
+    // column names for the file to write or format
+    headers: ["label", "value"],
+  },
+  // operations to perform on the other fields
+  // operations are set per field and are applied in order
+  // Note: if a field is under `parse.headers` but not listed here,
+  // and is not a groupByField, it will be ignored.
+  operations: {
+    description: [
+      // a list of categories and alias keywords
+      // The keyword matching uses substring matching and is case-insensitive.
+      // If a category is not found in a file, it will still be listed.
+      {
+        name: "match",
+        categories: [
+          { label: "Rent", keywords: ["Miete", "Rent"] },
+          { label: "Salary", keywords: ["Gehalt", "Salary"] },
+          { label: "Insurance", keywords: ["Versicherung"] },
+          { label: "Travel", keywords: ["Flight"] },
+          { label: "Expenses", keywords: [] }, // general catch-all for all unmatched items
+        ],
+      },
+    ],
+    date: [
+      { name: "parse_date", format: "DD.MM.YY" },
+      { name: "total_date_range", format: "DD.MM.YY - DD.MM.YY" },
+    ],
+    amount: [{ name: "parse_num", format: "EU" }, { name: "sum" }],
+  },
+};
+
+```
+
+### Supported operations
+
+#### parse_date
+
+Parse the value as date
+
+#### parse_num
+
+Parse the value as a number
+
+#### sum
+
+Sum the values per group
+
+#### total_date_range
+
+Calculate a date range of the given field from the whole file.
+This will be added as a new row in the file: total_date_range
+
+#### match
 
 ## Install and run
 
