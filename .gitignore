@@ -1,5 +1,6 @@
 # Config
 config/cleanup_template.js
+config/aggregate_template.js
 
 # Logs
 logs
