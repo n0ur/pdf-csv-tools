@@ -38,7 +38,7 @@ export const config = {
       },
       args: {
         field: "field1",
-        parseFn: "parse_partial_date",
+        parseFn: "parse_date",
         formatFn: "format_date_range",
       },
     },

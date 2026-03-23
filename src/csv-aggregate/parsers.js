@@ -9,14 +9,13 @@ export function parseEUNum(str) {
   return parsed;
 }
 
-// date: DD.MM
-export function parsePartialDate(str, year) {
-  const [d, m] = str.split(".");
-  const date = new Date(year, +m - 1, +d);
-  return date;
+// date: DD.MM.YYYY
+export function parseDate(str) {
+  const [d, m, y] = str.split(".");
+  return new Date(+y, +m - 1, +d);
 }
 
 export const parsersMap = {
   parse_eu_num: parseEUNum,
-  parse_partial_date: parsePartialDate,
+  parse_date: parseDate,
 };

@@ -44,5 +44,5 @@ export async function aggregate(files, { output, definition, concurrency }) {
     parseHeaders: parsedConfig.format.headers,
     outputFiles,
   });
-  csv.writeToPath(path.join(outputDir, SUMMARY_FILENAME), summaryRows);
+  return csv.writeToPath(path.join(outputDir, SUMMARY_FILENAME), summaryRows);
 }
