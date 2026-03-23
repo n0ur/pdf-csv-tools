@@ -9,12 +9,12 @@ export function formatToFixed(n) {
   return n.toFixed(2);
 }
 
-export function formatRange({ oldest, newest }) {
+export function formatDateRange({ oldest, newest }) {
   return formatDate(oldest) + " - " + formatDate(newest);
 }
 
 export const formattersMap = {
   format_date: formatDate,
   format_to_fixed: formatToFixed,
-  format_range: formatRange,
+  format_date_range: formatDateRange,
 };
