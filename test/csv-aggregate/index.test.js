@@ -7,7 +7,7 @@ import { aggregate } from "../../src/csv-aggregate/index.js";
 import { ZodError } from "zod";
 
 const readCsvFile = async (file, headers) => {
-  const rows = await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const rows = [];
     createReadStream(file)
       .pipe(parse({ headers }))
@@ -15,7 +15,6 @@ const readCsvFile = async (file, headers) => {
       .on("end", () => resolve(rows))
       .on("error", reject);
   });
-  return rows;
 };
 
 describe("csvAggregate", () => {

@@ -21,6 +21,7 @@
     "test": "node --test",
     "pdf2csv": "node src/index.js pdf2csv",
     "csv-clean": "node src/index.js csv-clean",
+    "csv-aggregate": "node src/index.js csv-aggregate",
     "prepare": "husky"
   },
   "engines": {

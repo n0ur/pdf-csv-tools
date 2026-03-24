@@ -1,16 +1,13 @@
 # PDF/CSV tools
 
-A collection of CLI tools for PDF/CSV files.
+A collection of CLI tools for PDF/CSV files: convert, clean, aggregate.
 
 #### pdf2csv
 
-Converts PDF files to CSV using tabula-java, to run it:
+Converts PDF files to CSV using tabula-java.
 
 ```
-npm run pdf2csv -- *.pdf -o csv/
-
--o: Output directory (if it doesn't exist, the script will attempt to create it)
--c: Max number of concurrent processes to run (optional, default is 5)
+npm run pdf2csv -- *.pdf --output csv/ --concurrency 5
 ```
 
 This simply runs the following command on all the pdf files:
@@ -21,31 +18,35 @@ tabula-java file.pdf -page all -t -o output.csv
 
 #### csv-clean
 
-Cleans up CSV files based on user defined rules, to run it:
+Cleans up CSV files based on user defined rules in a definition file.
 
 ```
-npm run csv-clean -- *.csv -o clean/ -d cleanup_def.js
-
--o: Output directory (if it doesn't exist, the script will attempt to create it)
--d: Path to the cleanup definition file
--c: Max number of concurrent processes to run (optional, default is 5)
+npm run csv-clean -- *.csv \
+    --output clean/ \
+    --definition config/cleanup_definition.js \
+    --concurrency 5
 ```
 
 #### csv-aggregate
 
-```
-npm run csv-aggregate -- *.csv -o output/ -d aggregate_def.js
+Aggregates CSV files based on user defined rules in a definition file.
 
--o: Output directory (if it doesn't exist, the script will attempt to create it)
--d: Path to the aggregate definition file
--c: Max number of concurrent processes to run (optional, default is 5)
+```
+npm run csv-aggregate -- *.csv \
+    --output aggregate/ \
+    --definition config/aggregate_definition.js \
+    --concurrency 5
 ```
 
 ## csv-clean
 
+This operation takes a cleanup definition file and applies it to the csv files. It uses `fast-csv` for parsing and writing the updated clean versions. The original files are not modified, new ones are created in the given output directory.
+
 ### Example
 
-After a PDF is converted to CSV, it might look like this:
+<div style="display:flex;">
+<div style="margin-right: 30px">
+Before (possibly after a pdf conversion):
 
 |                        |      |         |
 | ---------------------- | ---- | ------- |
@@ -57,7 +58,10 @@ After a PDF is converted to CSV, it might look like this:
 | CUSTOMER INFO          | XYZ  |         |
 | NAME, ADDRESS, PHONE   | XYZ  |         |
 
-We can define rules to clean it up to this:
+</div>
+
+<div>
+After cleanup:
 
 | Date       | Description | Amount  |
 | ---------- | ----------- | ------- |
@@ -65,45 +69,21 @@ We can define rules to clean it up to this:
 | 04.01.2026 | Insurance   | -50,00  |
 | 28.01.2026 | Salary      | +100,00 |
 
-This operation takes a cleanup definition file and applies it to the csv files. It uses `fast-csv` for parsing and writing the updated clean versions. The original files are not modified, new ones are created in the given output directory.
+</div>
+</div>
 
 ### Definition file
 
-The definition file follows a strict schema. To customize it, copy the template file in `config/cleanup_def_template.js` and edit it. Here are the supported options:
-
-```js
-{
-  parse: {
-    // column names for the file to read or parse
-    // undefined means skip this column and don't parse it
-    headers: ["field1", undefined, "field2"]
-  },
-  format: {
-    // column names for the file to write or format
-    // Note: Column names will not written to file,
-    //       they are used to reference in the operations below
-    headers: ["field1", "field2", "field3"],
-  },
-  // Operations are run in the order they are defined
-  operations: [
-    {
-      name: "skip_lines_from",
-      args: [
-        "Text 1",
-      ],
-    },
-    // ...
-  ],
-};
-```
+See `config/cleanup_definition.js`
 
 ### Supported operations
 
 #### skip_lines_including
 
-If a line matches any of the values, it will be removed.
+Case-sensitive, string matching using `includes()`
 
-Example:
+<div style="display:flex;">
+<div style="margin-right: 30px; width: 50%">
 
 ```js
 {
@@ -115,7 +95,9 @@ Example:
 }
 ```
 
-After applying the operation:
+</div>
+
+<div>
 
 ```diff
 01.01.2026 Rent to XYZ, ,"-900,70"
@@ -124,11 +106,15 @@ After applying the operation:
 - Account number, XYZ,
 ```
 
+</div>
+</div>
+
 #### skip_lines_from
 
-All lines matching and coming after any of the values will be removed.
+Case-sensitive, string matching using `includes()`
 
-Example:
+<div style="display:flex;">
+<div style="margin-right: 30px; width: 50%">
 
 ```js
 {
@@ -139,7 +125,9 @@ Example:
 }
 ```
 
-After applying the operation:
+</div>
+
+<div>
 
 ```diff
 01.01.2026 Rent to XYZ, ,"-900,70"
@@ -147,14 +135,19 @@ After applying the operation:
 - CUSTOMER INFORMATION, ,
 - Name, ID, ,
 - Address, ,
+- ....
 ```
+
+</div>
+</div>
 
 #### merge_lines
 
-The merging behavior is as follows:
-all rows that have an empty `emptyField`, will be merged into the previous row's `mergeField`.
+All rows that have an empty `emptyField`, will be merged into the previous row's `mergeField`.
+This example requries `parse.headers` in the definition file to include "description" and "amount".
 
-For this operation to work, make sure the `headers` are set properly in the config. This example would need `parse.headers` to include "description" and "amount".
+<div style="display:flex;">
+<div style="margin-right: 30px; width: 50%">
 
 ```js
 {
@@ -166,17 +159,21 @@ For this operation to work, make sure the `headers` are set properly in the conf
 }
 ```
 
-After applying the operation:
+</div>
+
+<div>
 
 ```diff
-01.01.2026 Info ,
-- 01.01.2026 Rent to XYZ, ,"-900,70"
-- details, ,
-- 04.01.2026 Insurance, ,"-50,00"
-- Other details, ,
-+ 01.01.2026 Rent to XYZ details, ,"-900,70"
-+ 04.01.2026 Insurance Other details, ,"-50,00"
+- Rent to XYZ, "-900,70"
+- details,
+- Insurance, "-50,00"
+- Other details,
++ Rent to XYZ details, "-900,70"
++ Insurance Other details, "-50,00"
 ```
+
+</div>
+</div>
 
 #### split_lines_on
 
@@ -185,9 +182,12 @@ Splits a field in a line based on regex.
 For this operation to work, make sure the `headers` are set properly in the config. This example would need `parse.headers` to include "description",
 and `format.headers` to include "date".
 
+<div style="display:flex;">
+<div style="margin-right: 30px; width: 50%">
+
 ```js
 {
-    operation: "split_lines_on",
+    name: "split_lines_on",
     args: {
         match: "\\d{2}.\\d{2}",
         splitField: "description",
@@ -196,7 +196,9 @@ and `format.headers` to include "date".
 },
 ```
 
-After applying the operation:
+</div>
+
+<div>
 
 ```diff
 - 01.01 Rent to XYZ, "-900,70"
@@ -205,34 +207,34 @@ After applying the operation:
 + 04.01, Insurance, "-50,00"
 ```
 
+</div>
+</div>
+
 ### Extend the operations
 
-Extending the cleanup operations is simple, make sure to:
-
 - Define a new operation as a Transform stream in `src/csv-clean/operations`.
-- Add the entry to `src/csv-clean/index.js`.
-- Define the schema operation in `src/csv-clean/cleanupDefSchema.js`.
+- Extend the schema in `src/csv-clean/cleanupSchema.js`.
 - Add tests.
 
 ## csv-aggregate
 
-Aggregates lines in a CSV file based on predefined keywords and custom functions, then combines the aggregates of each file into one.
+This operation aggregates lines in a CSV files as defined in the definition file, it also combines the aggregated data of all files into one summary file. It uses `fast-csv` for parsing and writing the updated clean versions. The original files are not modified, new ones are created in the given output directory.
 
 ### Example
 
 Given CSV files with this format:
 
 <div style="display:flex;">
-<div style="margin-right: 30px">
+<div style="margin-right: 30px; width: 50%">
 File 1:
 
-| Date     | Description  | Amount   |
-| -------- | ------------ | -------- |
-| 01.01.26 | Miete XYZ    | -900,70  |
-| 04.01.26 | Versicherung | -50,00   |
-| 28.01.26 | Salary       | +1000,00 |
-| 28.01.26 | Coffee       | -10,00   |
-| 31.01.26 | T-shirt      | -30,00   |
+| Date     | Description | Amount   |
+| -------- | ----------- | -------- |
+| 01.01.26 | Rent XYZ    | -900,70  |
+| 04.01.26 | Insurance   | -50,00   |
+| 28.01.26 | Salary      | +1000,00 |
+| 28.01.26 | Coffee      | -10,00   |
+| 31.01.26 | Tea         | -30,00   |
 
 </div>
 
@@ -241,7 +243,7 @@ File 2:
 
 | Date     | Description | Amount   |
 | -------- | ----------- | -------- |
-| 01.02.26 | Miete XYZ   | -900,70  |
+| 01.02.26 | Rent XYZ    | -900,70  |
 | 15.02.26 | Supermarket | -60,00   |
 | 16.02.26 | Flight to X | -70,00   |
 | 17.02.26 | Coffee      | -10,00   |
@@ -250,20 +252,19 @@ File 2:
 </div>
 </div>
 
-The script will first aggregate each file independently, based on user defined rules (see below).
+The script will first aggregate each file independently; rows are grouped by categories defined in the definition file, and the date range is calculated and added as an extra row. This example defines 3 categories (Rent, Salary, Other Expenses).
 
 <div style="display:flex;">
-<div style="margin-right: 30px">
+<div style="margin-right: 30px; width: 50%">
 
 File 1:
 
-| Label            | Value               |
-| ---------------- | ------------------- |
-| total_date_range | 01.01.26 - 31.01.26 |
-| Rent             | -900,70             |
-| Insurance        | -50,00              |
-| Salary           | +1000,00            |
-| Expenses         | -40,00              |
+| Label          | Value               |
+| -------------- | ------------------- |
+| Date Range     | 01.01.26 - 31.01.26 |
+| Rent           | -900,70             |
+| Salary         | +1000,00            |
+| Other Expenses | -90,00              |
 
 </div>
 
@@ -271,92 +272,96 @@ File 1:
 
 File 2:
 
-| Label            | Value               |
-| ---------------- | ------------------- |
-| total_date_range | 01.02.26 - 28.02.26 |
-| Rent             | -900,70             |
-| Salary           | +1000,00            |
-| Expenses         | -140,00             |
-| Travel           | -70,00              |
+| Label          | Value               |
+| -------------- | ------------------- |
+| Date Range     | 01.02.26 - 28.02.26 |
+| Rent           | -900,70             |
+| Salary         | +1000,00            |
+| Other Expenses | -140,00             |
 
 </div>
 </div>
 
-Then create one file with the aggregate of each file:
+All files are also combined in one summary file:
 
-|                  |                     |                     |
-| ---------------- | ------------------- | ------------------- |
-| total_date_range | 01.01.26 - 31.01.26 | 01.02.26 - 28.02.26 |
-| Rent             | -900,70             | -900,70             |
-| Salary           | +1000,00            | +1000,00            |
-| Insurance        | -50,00              |                     |
-| Travel           |                     | -70,00              |
-| Expenses         | -40,00              | -140,00             |
+| Label          |                     |                     |
+| -------------- | ------------------- | ------------------- |
+| Date Range     | 01.01.26 - 31.01.26 | 01.02.26 - 28.02.26 |
+| Rent           | -900,70             | -900,70             |
+| Salary         | +1000,00            | +1000,00            |
+| Other Expenses | -90,00              | -140,00             |
 
-This operation takes an aggregate definition file and applies it to the csv files. It uses `fast-csv` for parsing and writing the updated clean versions. The original files are not modified, new ones are created in the given output directory.
+### Definition file
 
-### Aggregate definition file
-
-```js
-{
-  parse: {
-    // column names for the file to read or parse
-    headers: ["date", "description", "amount"],
-  },
-  format: {
-    // column names for the file to write or format
-    headers: ["label", "value"],
-  },
-  // operations to perform on the other fields
-  // operations are set per field and are applied in order
-  // Note: if a field is under `parse.headers` but not listed here,
-  // and is not a groupByField, it will be ignored.
-  operations: {
-    description: [
-      // a list of categories and alias keywords
-      // The keyword matching uses substring matching and is case-insensitive.
-      // If a category is not found in a file, it will still be listed.
-      {
-        name: "match",
-        categories: [
-          { label: "Rent", keywords: ["Miete", "Rent"] },
-          { label: "Salary", keywords: ["Gehalt", "Salary"] },
-          { label: "Insurance", keywords: ["Versicherung"] },
-          { label: "Travel", keywords: ["Flight"] },
-          { label: "Expenses", keywords: [] }, // general catch-all for all unmatched items
-        ],
-      },
-    ],
-    date: [
-      { name: "parse_date", format: "DD.MM.YY" },
-      { name: "total_date_range", format: "DD.MM.YY - DD.MM.YY" },
-    ],
-    amount: [{ name: "parse_num", format: "EU" }, { name: "sum" }],
-  },
-};
-
-```
+See `config/aggregate_definition.js`
 
 ### Supported operations
 
-#### parse_date
+Note: Custom parsers and formatters are defined and used in the definition file.
 
-Parse the value as date
+#### aggregate_by_buckets
 
-#### parse_num
+```js
+{
+    name: "aggregate_by_buckets",
+    parse: {
+        headers: ["description", "amount"],
+    },
+    args: {
+        field: "amount",
+        parseFn: "parse_eu_num",
+        formatFn: "format_to_fixed",
+        groupBy: {
+            field: "description",
+            buckets: [
+                { label: "travel", keywords: ["flight", "car", "boat"] },
+                { label: "default", keywords: [] }
+            ]
+        }
+    }
+},
+```
 
-Parse the value as a number
+```diff
+- Rent to XYZ, "900,00-"
+- Flight to X, "50,00-"
+- And a boat trip, "50,00-"
+- Food, "100,00-"
++ travel, "-100.00"
++ default, "-1000.00"
+```
 
-#### sum
+#### aggregate_date_range
 
-Sum the values per group
+```js
+{
+    name: "aggregate_date_range",
+    parse: {
+        headers: ["date"],
+    },
+    args: {
+        field: "date",
+        parseFn: "parse_date",
+        formatFn: "format_date_range",
+    }
+},
+```
 
-#### total_date_range
+```diff
+- 01.01.2026, Rent to XYZ, "900,00-"
+- 13.01.2026, Flight to X, "50,00-"
+- 20.01.2026, And a boat trip, "50,00-"
+- 31.01.2026, Food, "100,00-"
++ date, "01.01.2026 - 31.01.2026"
+```
 
-Calculate a date range of the given field from the whole file.
-This will be added as a new row in the file: total_date_range
+### Extend the operations
 
-#### match
+- Define a new operation as a Transform stream in `src/csv-aggregate/operations`.
+- Extend the schema `src/csv-aggregate/aggregateSchema.js`.
+- Add tests.
+
+Extend parsers in `src/csv-aggregate/parsers.js` and formatters in `src/csv-aggregate/formatters.js`
 
 ## Install and run
 
