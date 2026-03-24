@@ -1,7 +1,7 @@
-// 3.233,00-
+// num: 3.233,00-
 export function parseEUNum(str) {
   const formatted = str.trim().replace(/[.]/g, "").replace(",", ".");
-  const isNegative = formatted.endsWith("-") || formatted.startsWith("-");
+  const isNegative = formatted.endsWith("-");
   const parsed = parseFloat(formatted) * (isNegative ? -1 : 1);
   if (Number.isNaN(parsed)) {
     throw new Error(`Cound not parse EU number: ${str}`);
@@ -12,7 +12,11 @@ export function parseEUNum(str) {
 // date: DD.MM.YYYY
 export function parseDate(str) {
   const [d, m, y] = str.split(".");
-  return new Date(+y, +m - 1, +d);
+  const date = new Date(+y, +m - 1, +d);
+  if (isNaN(date.getTime())) {
+    throw new Error(`Could not parse date: ${str}`);
+  }
+  return date;
 }
 
 export const parsersMap = {

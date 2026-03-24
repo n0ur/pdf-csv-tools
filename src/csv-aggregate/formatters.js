@@ -1,4 +1,7 @@
 export function formatDate(date) {
+  if (isNaN(date.getTime())) {
+    throw new Error(`Could not format date: ${date}`);
+  }
   const d = String(date.getDate()).padStart(2, "0");
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const y = String(date.getFullYear()).slice(-2);
@@ -6,6 +9,9 @@ export function formatDate(date) {
 }
 
 export function formatToFixed(n) {
+  if (isNaN(n)) {
+    throw new Error(`Could not format number: ${n}`);
+  }
   return n.toFixed(2);
 }
 
