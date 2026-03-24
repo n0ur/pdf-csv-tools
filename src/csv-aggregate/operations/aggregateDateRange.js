@@ -1,6 +1,6 @@
 import { Transform } from "node:stream";
 
-export function dateRange({ field, parseFn, formatFn, format }) {
+export function aggregateDateRange({ field, parseFn, formatFn, format }) {
   let range = {
     oldest: null,
     newest: null,

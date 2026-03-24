@@ -26,7 +26,7 @@ const operationsSchema = z.discriminatedUnion("name", [
   }),
 ]);
 
-export const cleanupDefSchema = z.object({
+export const cleanupSchema = z.object({
   parse: z.object({
     headers: z.array(z.union([z.string(), z.undefined()])),
   }),

@@ -2,7 +2,7 @@ import { Transform } from "node:stream";
 
 const defaultLabel = "N/A";
 
-export function sumGroupByBuckets(operation) {
+export function aggregateByBuckets(operation) {
   const buckets = operation.groupBy.buckets;
 
   const defaultBucket =

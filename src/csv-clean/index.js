@@ -2,7 +2,7 @@ import path from "node:path";
 import { mkdirSyncIfNotExists, runTasks } from "../utils.js";
 import { cleanupPipeline } from "./cleanupPipeline.js";
 import { existsSync } from "node:fs";
-import { cleanupDefSchema } from "./cleanupDefSchema.js";
+import { cleanupSchema } from "./cleanupSchema.js";
 
 export async function csvClean(...args) {
   try {
@@ -19,7 +19,7 @@ export async function cleanup(files, { output, definition, concurrency }) {
     throw new Error(`Cleanup definition file doesn't exist: ${definition}`);
   }
   const config = (await import(definitionFile))?.config;
-  const parsedConfig = cleanupDefSchema.parse(config);
+  const parsedConfig = cleanupSchema.parse(config);
 
   const outputDir = path.resolve(output);
   mkdirSyncIfNotExists(outputDir);

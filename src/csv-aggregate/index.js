@@ -1,9 +1,10 @@
 import * as csv from "fast-csv";
 import path from "node:path";
+import { finished } from "node:stream/promises";
 import { mkdirSyncIfNotExists, runTasks } from "../utils.js";
 import { aggregatePipeline } from "./aggregatePipeline.js";
 import { existsSync } from "node:fs";
-import { aggregateDefSchema } from "./aggregateDefSchema.js";
+import { aggregateSchema } from "./aggregateSchema.js";
 import { combinePipeline } from "./combinePipeline.js";
 
 const SUMMARY_FILENAME = "summary.csv";
@@ -23,7 +24,7 @@ export async function aggregate(files, { output, definition, concurrency }) {
     throw new Error(`Aggregate definition file doesn't exist: ${definition}`);
   }
   const config = (await import(definitionFile))?.config;
-  const parsedConfig = aggregateDefSchema.parse(config);
+  const parsedConfig = aggregateSchema.parse(config);
 
   const outputDir = path.resolve(output);
   mkdirSyncIfNotExists(outputDir);
@@ -44,5 +45,7 @@ export async function aggregate(files, { output, definition, concurrency }) {
     parseHeaders: parsedConfig.format.headers,
     outputFiles,
   });
-  return csv.writeToPath(path.join(outputDir, SUMMARY_FILENAME), summaryRows);
+  return finished(
+    csv.writeToPath(path.join(outputDir, SUMMARY_FILENAME), summaryRows),
+  );
 }

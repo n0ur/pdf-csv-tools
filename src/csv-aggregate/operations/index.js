@@ -1,9 +1,9 @@
-import { sumGroupByBuckets } from "./sumGroupByBuckets.js";
-import { dateRange } from "./dateRange.js";
+import { aggregateByBuckets } from "./aggregateByBuckets.js";
+import { aggregateDateRange } from "./aggregateDateRange.js";
 
 export const operationsMap = {
-  sum_group_by_buckets: sumGroupByBuckets,
-  date_range: dateRange,
+  aggregate_by_buckets: aggregateByBuckets,
+  aggregate_date_range: aggregateDateRange,
 };
 
-export { sumGroupByBuckets, dateRange };
+export { aggregateByBuckets, aggregateDateRange };

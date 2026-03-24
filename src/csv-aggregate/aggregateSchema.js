@@ -19,7 +19,7 @@ const bucketsSchema = z.array(
 
 const operationsSchema = z.discriminatedUnion("name", [
   z.object({
-    name: z.literal("sum_group_by_buckets"),
+    name: z.literal("aggregate_by_buckets"),
     parse: headersSchema,
     args: z.object({
       field: z.string(),
@@ -32,7 +32,7 @@ const operationsSchema = z.discriminatedUnion("name", [
     }),
   }),
   z.object({
-    name: z.literal("date_range"),
+    name: z.literal("aggregate_date_range"),
     parse: headersSchema,
     args: z.object({
       field: z.string(),
@@ -42,7 +42,7 @@ const operationsSchema = z.discriminatedUnion("name", [
   }),
 ]);
 
-export const aggregateDefSchema = z.object({
+export const aggregateSchema = z.object({
   format: headersSchema,
   operations: z.array(operationsSchema),
 });

@@ -8,7 +8,7 @@ export const config = {
   operations: [
     // similar to: select sum(field2) from x group by field3
     {
-      name: "sum_group_by_buckets",
+      name: "aggregate_by_buckets",
       parse: {
         headers: [undefined, "field2", "field3"],
       },
@@ -32,7 +32,7 @@ export const config = {
     },
     // similar to: select date_range(date) from x
     {
-      name: "date_range",
+      name: "aggregate_date_range",
       parse: {
         headers: ["field1", undefined, undefined],
       },
