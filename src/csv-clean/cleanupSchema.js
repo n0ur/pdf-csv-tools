@@ -24,6 +24,13 @@ const operationsSchema = z.discriminatedUnion("name", [
       newField: z.string(),
     }),
   }),
+  z.object({
+    name: z.literal("append_to_field"),
+    args: z.object({
+      field: z.string(),
+      value: z.string(),
+    }),
+  }),
 ]);
 
 export const cleanupSchema = z.object({

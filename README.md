@@ -210,6 +210,39 @@ and `format.headers` to include "date".
 </div>
 </div>
 
+#### append_to_field
+
+Appends a value to a field.
+
+This example needs `format.headers` to include "date".
+
+<div style="display:flex;">
+<div style="margin-right: 30px; width: 50%">
+
+```js
+{
+    name: "append_to_field",
+    args: {
+        field: "date",
+        value: "2026"
+    }
+},
+```
+
+</div>
+
+<div>
+
+```diff
+- 01.01., Rent to XYZ, "-900,70"
+- 04.01., Insurance, "-50,00"
++ 01.01.2026, Rent to XYZ, "-900,70"
++ 04.01.2026, Insurance, "-50,00"
+```
+
+</div>
+</div>
+
 ### Extend the operations
 
 - Define a new operation as a Transform stream in `src/csv-clean/operations`.

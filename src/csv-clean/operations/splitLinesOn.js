@@ -11,7 +11,7 @@ export const splitLinesOn = ({ match, splitField, newField }) => {
       this.push({
         ...chunk,
         [splitField]: chunk[splitField].replace(value, "").trim(),
-        [newField]: value,
+        [newField]: value.trim(),
       });
       callback();
     },
