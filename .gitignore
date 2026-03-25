@@ -1,6 +1,5 @@
-# Config
-config/cleanup_template.js
-config/aggregate_template.js
+# Custom data files
+data
 
 # Logs
 logs
